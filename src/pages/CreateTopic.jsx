@@ -9,10 +9,11 @@ import {
   Input,
   Textarea,
   VStack,
+  calc,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
-
 import Dropzone, { useDropzone } from "react-dropzone";
+import { route } from "../../const";
 
 const CreateTopic = () => {
   const onDrop = useCallback((acceptedFiles) => {
@@ -23,6 +24,9 @@ const CreateTopic = () => {
   const [topicName, setTopicName] = useState("");
   const [urls, setUrls] = useState("");
   const [files, setFiles] = useState([]);
+  const [topics, setTopics] = useState([]);
+  const [awaitingResponse, setAwaitingResponse] = useState(false);
+  const [displayErrorMessage, setDisplayErrorMessage] = useState(false);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   const handleTopicNameChange = (e) => {
@@ -33,13 +37,16 @@ const CreateTopic = () => {
     setUrls(e.target.value);
   };
 
-  // const onDrop = (acceptedFiles) => {
-  //   setFiles(acceptedFiles);
-  // };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setAwaitingResponse(true);
+    setDisplayErrorMessage(false);
     console.log("submitted");
+
+    if (!validateTopicName(topicName)) {
+      setDisplayErrorMessage(true);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("topicName", topicName);
@@ -50,7 +57,7 @@ const CreateTopic = () => {
     });
 
     try {
-      const response = await fetch("http://127.0.0.1:4100/process", {
+      const response = await fetch(`${route}/process`, {
         method: "POST",
         body: formData,
       });
@@ -67,11 +74,41 @@ const CreateTopic = () => {
       console.error("Error:", error);
     }
     console.log("ended");
+    setAwaitingResponse(false);
   };
 
   useEffect(() => {
-    console.log(files);
-  }, [files]);
+    fetch(`${route}/get_all_topics`, {
+      method: "GET",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setTopics(data.topics.map((topic) => topic.toLowerCase()));
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+  }, []);
+
+  const validateTopicName = (name) => {
+    if (topics.includes(name.toLowerCase())) {
+      console.log("hello");
+      return false;
+    }
+
+    const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$/; // Regex to match the constraints
+
+    if (!regex.test(name)) {
+      return false;
+    }
+
+    // Additional checks for IPv4 address
+    if (/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(name)) {
+      return false;
+    }
+
+    return true;
+  };
 
   return (
     <Box w="4xl" py="12" px="6" m="auto">
@@ -88,6 +125,15 @@ const CreateTopic = () => {
             onChange={handleTopicNameChange}
             placeholder="API Documents"
           />
+          {displayErrorMessage && (
+            <FormHelperText>
+              Topic name must follow the following rules: (1) contain 3-63
+              characters, (2) starts and ends with an alphanumeric character,
+              (3) otherwise contains only alphanumeric characters, underscores
+              or hyphens (-), (4) contains no two consecutive periods (..) and
+              (5) is not a valid IPv4 address,
+            </FormHelperText>
+          )}
         </FormControl>
 
         <FormControl>
@@ -107,12 +153,21 @@ const CreateTopic = () => {
         </FormControl>
         <FormControl>
           <FormLabel>Upload files</FormLabel>
-          <Flex {...getRootProps()} h="150px" bg="#eff3f8" borderRadius="3xl" alignItems={"center"} justifyContent={{"center"}}>
+          <Flex
+            {...getRootProps()}
+            h="150px"
+            bg="#eff3f8"
+            borderRadius="3xl"
+            alignItems={"center"}
+            justifyContent={"center"}
+          >
             <input {...getInputProps()} />
             {isDragActive ? (
               <p>Drop the files here...</p>
-            ) : (
+            ) : files.length == 0 ? (
               <p>Drag 'n' drop some files here, or click to select files</p>
+            ) : (
+              <p>{files.length} files uploaded</p>
             )}
           </Flex>
         </FormControl>
@@ -122,7 +177,9 @@ const CreateTopic = () => {
           bg="#002d72"
           color="white"
           _hover={{ bg: "#002d72" }}
+          _disabled={{ bg: "#333333" }}
           onClick={handleSubmit}
+          disabled={awaitingResponse}
         >
           Submit
         </Button>

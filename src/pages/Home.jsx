@@ -7,7 +7,10 @@ import {
   Image,
   Spacer,
   Button,
+  useStatStyles,
 } from "@chakra-ui/react";
+import { route } from "../../const";
+import { useEffect, useState } from "react";
 
 const Topic = ({ children }) => {
   return (
@@ -22,27 +25,46 @@ const Topic = ({ children }) => {
       borderColor="#eff3f8"
       transition="transform .6s cubic-bezier(.075,.82,.165,1),border-color
           .3s cubic-bezier(.165,.84,.44,1)"
-      _hover={{ borderColor: "#056dae" }}>
+      _hover={{ borderColor: "#056dae" }}
+    >
       {children}
     </Flex>
   );
 };
 
 const Home = () => {
+  const [topics, setTopics] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${route}/get_all_topics`, {
+      method: "GET",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setTopics(data.topics);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+      });
+  }, []);
+  console.log(topics);
+
   return (
     <Box w="4xl" py="12" px="6" m="auto">
       <Heading>Topics</Heading>
       <SimpleGrid columns={3} gap={8} mt={6}>
-        <Topic>
-          <Text fontWeight="semibold" fontSize="lg">
-            Topic A
-          </Text>
-        </Topic>
-        <Topic>
-          <Text fontWeight="semibold" fontSize="lg">
-            Topic B
-          </Text>
-        </Topic>
+        {loading
+          ? "Loading"
+          : topics.map((topic) => (
+              <Topic key={topic}>
+                <Text fontWeight="semibold" fontSize="lg">
+                  {topic}
+                </Text>
+              </Topic>
+            ))}
       </SimpleGrid>
     </Box>
   );
