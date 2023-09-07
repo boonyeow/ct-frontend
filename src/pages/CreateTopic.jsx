@@ -123,6 +123,7 @@ const CreateTopic = () => {
             bg="#eff3f8"
             value={topicName}
             onChange={handleTopicNameChange}
+            color="#056dae"
             placeholder="API Documents"
           />
           {displayErrorMessage && (
@@ -145,8 +146,8 @@ const CreateTopic = () => {
             placeholder={`https://url1.com\nhttps://url2.com\nhttps://url3.com`}
             p={8}
             value={urls}
-            onChange={handleUrlsChange}
-          ></Textarea>
+            color="#056dae"
+            onChange={handleUrlsChange}></Textarea>
           <FormHelperText>
             *Please separate multiple links with a new line
           </FormHelperText>
@@ -160,7 +161,7 @@ const CreateTopic = () => {
             borderRadius="3xl"
             alignItems={"center"}
             justifyContent={"center"}
-          >
+            color="#056dae">
             <input {...getInputProps()} />
             {isDragActive ? (
               <p>Drop the files here...</p>
@@ -179,8 +180,7 @@ const CreateTopic = () => {
           _hover={{ bg: "#002d72" }}
           _disabled={{ bg: "#333333" }}
           onClick={handleSubmit}
-          disabled={awaitingResponse}
-        >
+          disabled={awaitingResponse}>
           Submit
         </Button>
       </Flex>

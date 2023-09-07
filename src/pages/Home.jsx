@@ -8,13 +8,17 @@ import {
   Spacer,
   Button,
   useStatStyles,
+  LinkBox,
 } from "@chakra-ui/react";
 import { route } from "../../const";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-const Topic = ({ children }) => {
+const Topic = ({ children, to }) => {
   return (
     <Flex
+      as={Link}
+      to={to}
       borderRadius="3xl"
       height="180px"
       color="#056dae"
@@ -25,8 +29,7 @@ const Topic = ({ children }) => {
       borderColor="#eff3f8"
       transition="transform .6s cubic-bezier(.075,.82,.165,1),border-color
           .3s cubic-bezier(.165,.84,.44,1)"
-      _hover={{ borderColor: "#056dae" }}
-    >
+      _hover={{ borderColor: "#056dae" }}>
       {children}
     </Flex>
   );
@@ -59,7 +62,7 @@ const Home = () => {
         {loading
           ? "Loading"
           : topics.map((topic) => (
-              <Topic key={topic}>
+              <Topic to={topic} key={topic}>
                 <Text fontWeight="semibold" fontSize="lg">
                   {topic}
                 </Text>
